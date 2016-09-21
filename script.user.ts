@@ -6,11 +6,9 @@
 // @author       Henning Dieterichs
 // @match        https://github.com/*
 // @grant          GM_addStyle
-// @require http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // ==/UserScript==
 
 
-declare var jQuery: (x: string) => HTMLElement[];
 declare var GM_addStyle: any;
 
 GM_addStyle(`
@@ -1721,7 +1719,7 @@ function tokenize2(line: HTMLElement, s: TokenizerState, eof: boolean) {
 function tokenize() {
 
 	var s: TokenizerState = { stack:[], identifier: undefined };
-	var arr = jQuery(".js-file-line");
+	var arr = document.querySelectorAll(".js-file-line");
 	for (var lineIdx = 0; lineIdx < arr.length; lineIdx++) {
         tokenize2(arr[lineIdx], s, lineIdx === arr.length - 1);
 	}
@@ -1740,12 +1738,12 @@ function update() {
 		tokenize();
 	}
 
-    for (var html of $("pre[lang='tyml'] code") as HTMLElement[]) {
+    for (var html of document.querySelectorAll("pre[lang='tyml'] code") as HTMLElement[]) {
         tokenize2(html, null, true);
     }
 }
 
-var pjaxContainer = jQuery('#js-repo-pjax-container')[0];
+var pjaxContainer = document.querySelectorAll('#js-repo-pjax-container')[0];
 
 if (pjaxContainer) {
     // use MutationObserver as we can't inject into History API

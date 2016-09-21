@@ -6,7 +6,6 @@
 // @author       Henning Dieterichs
 // @match        https://github.com/*
 // @grant          GM_addStyle
-// @require http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // ==/UserScript==
 GM_addStyle("\n    .token.Invalid {\n        color: red;\n    }\n    .token.HeredocStringDelimiter, .token.HeredocStringStart1, .token.HeredocStringStart2, .token.HeredocStringEnd1, .token.HeredocStringEnd2 {\n        color: rgb(87, 87, 87)\n    }\n    .token.HeredocStringEscapeSeq {\n    }\n    .token.HeredocString {\n        color: rgb(3, 57, 202)\n    }\n    .token.StringStart {\n    }\n    .token.StringEnd {\n    }\n    .token.StringText {\n        color: rgb(3, 57, 202)\n    }\n    .token.ArrayStart {\n    }\n    .token.ArrayEnd {\n    }\n    .token.MarkupArrayStart {\n    }\n    .token.MarkupArrayEnd {\n    }\n    .token.MarkupString {\n        color: rgb(88, 120, 170)\n    }\n    .token.CommentStart1 {\n        color: rgb(8, 203, 0)\n    }\n    .token.CommentDelimiter {\n        color: rgb(8, 203, 0)\n    }\n    .token.CommentStart2 {\n        color: rgb(8, 203, 0)\n    }\n    .token.CommentEnd1 {\n        color: rgb(8, 203, 0)\n    }\n    .token.CommentEnd2 {\n        color: rgb(8, 203, 0)\n    }\n    .token.Comment {\n        color: rgb(8, 203, 0)\n    }\n    .token.TypePrefix {\n        color: rgb(73, 175, 175)\n    }\n    .token.TypeName {\n        color: rgb(43, 145, 175)\n    }\n    .token.ObjectStart {\n    }\n    .token.ObjectEnd {\n    }\n    .token.AttributePrefix {\n        color: rgb(253, 151, 31)\n    }\n    .token.PrefixSeparator {\n    }\n    .token.AttributeName {\n        color: rgb(233, 131, 11)\n    }\n    .token.AttributeColon {\n    }\n    .token.EscapeSeqStart {\n    }\n    .token.EscapeSeq {\n    }\n    .token.Invalid {\n    }\n    .token.Primitive {\n        color: rgb(214, 49, 217)\n    }\n");
 function readWhitespace(buffer, end, pos) {
@@ -1871,7 +1870,7 @@ function tokenize2(line, s, eof) {
 }
 function tokenize() {
     var s = { stack: [], identifier: undefined };
-    var arr = jQuery(".js-file-line");
+    var arr = document.querySelectorAll(".js-file-line");
     for (var lineIdx = 0; lineIdx < arr.length; lineIdx++) {
         tokenize2(arr[lineIdx], s, lineIdx === arr.length - 1);
     }
@@ -1886,12 +1885,12 @@ function update() {
     if (lastPathName.endsWith(".tyml")) {
         tokenize();
     }
-    for (var _i = 0, _a = $("pre[lang='tyml'] code"); _i < _a.length; _i++) {
+    for (var _i = 0, _a = document.querySelectorAll("pre[lang='tyml'] code"); _i < _a.length; _i++) {
         var html = _a[_i];
         tokenize2(html, null, true);
     }
 }
-var pjaxContainer = jQuery('#js-repo-pjax-container')[0];
+var pjaxContainer = document.querySelectorAll('#js-repo-pjax-container')[0];
 if (pjaxContainer) {
     // use MutationObserver as we can't inject into History API
     new MutationObserver(update).observe(pjaxContainer, { childList: true });
