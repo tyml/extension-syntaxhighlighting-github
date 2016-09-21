@@ -110,8 +110,7 @@ function readWhitespace(buffer: string, end: number, pos: number): { newPos: num
     var startPos = pos;
     while (pos < end)
     {
-        if (buffer[pos] == ' ' || buffer[pos] == '\t' || buffer[pos] == '\n' || buffer[pos] == '\r')
-        {
+        if (buffer[pos] == ' ' || buffer[pos] == '\t' || buffer[pos] == '\n' || buffer[pos] == '\r') {
             pos++;
         }
         else break;
@@ -121,10 +120,13 @@ function readWhitespace(buffer: string, end: number, pos: number): { newPos: num
 }
 
 function readOptionalIdentifier(buffer: string, end: number, pos: number): { newPos: number, successful: boolean, needMoreLookahead: boolean } {
+    var start = pos;
     while (pos < end)
     {
-        if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z'))
-        {
+        if (pos != start && ('0' <= buffer[pos] && buffer[pos] <= '9')) {
+            pos++;
+        }
+        else if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z')) {
             pos++;
         }
         else break;
@@ -140,9 +142,16 @@ function readRequiredIdentifier(buffer: string, end: number, pos: number): { new
 }
 
 function readPrimitive(buffer: string, end: number, pos: number): { newPos: number, successful: boolean, needMoreLookahead: boolean } {
-    // for now good enough
-    var result = readRequiredIdentifier(buffer, end, pos);
-    return result;
+    var start = pos;
+    while (pos < end)
+    {
+        if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z') || ('0' <= buffer[pos] && buffer[pos] <= '9') || buffer[pos] == '.') {
+            pos++;
+        }
+        else break;
+    }
+
+    return { newPos: pos, successful: start != pos, needMoreLookahead: pos == end };
 }
 
 function readMatchIdentifier(buffer: string, end: number, pos: number, identifier: string): { newPos: number, successful: boolean, needMoreLookahead: boolean } {
@@ -1694,24 +1703,27 @@ class Tokenizer
     }
 }
 
+function tokenize2(line: HTMLElement, s: TokenizerState, eof: boolean) {
+    var text = line.innerText;
+    var tokens = [] as Token[];
+    Tokenizer.Tokenize(s, text, 0, text.length, eof, tokens);
+    var newHtml = "";
+    var lastPos = 0;
+    for (var t of tokens) {
+        var tokenText = text.substring(lastPos, t.endPos);
+        lastPos = t.endPos; 
+        newHtml += `<span class="token ${TokenType[t.type]}">${tokenText}</span>`;
+    }
+    
+    line.innerHTML = newHtml;
+}
+
 function tokenize() {
 
 	var s: TokenizerState = { stack:[], identifier: undefined };
 	var arr = jQuery(".js-file-line");
 	for (var lineIdx = 0; lineIdx < arr.length; lineIdx++) {
-		var line = arr[lineIdx];
-		var text = line.innerText;
-		var tokens = [] as Token[];
-		Tokenizer.Tokenize(s, text, 0, text.length, lineIdx === arr.length - 1, tokens);
-		var newHtml = "";
-		var lastPos = 0;
-		for (var t of tokens) {
-			var tokenText = text.substring(lastPos, t.endPos);
-			lastPos = t.endPos; 
-			newHtml += `<span class="token ${TokenType[t.type]}">${tokenText}</span>`;
-		}
-		
-		line.innerHTML = newHtml;
+        tokenize2(arr[lineIdx], s, lineIdx === arr.length - 1);
 	}
 }
 
@@ -1727,6 +1739,10 @@ function update() {
 	if (lastPathName.endsWith(".tyml")) {
 		tokenize();
 	}
+
+    for (var html of $("pre[lang='tyml'] code") as HTMLElement[]) {
+        tokenize2(html, null, true);
+    }
 }
 
 var pjaxContainer = jQuery('#js-repo-pjax-container')[0];

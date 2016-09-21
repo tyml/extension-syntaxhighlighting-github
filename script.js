@@ -21,8 +21,12 @@ function readWhitespace(buffer, end, pos) {
     return { newPos: pos, successful: startPos != pos, needMoreLookahead: false };
 }
 function readOptionalIdentifier(buffer, end, pos) {
+    var start = pos;
     while (pos < end) {
-        if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z')) {
+        if (pos != start && ('0' <= buffer[pos] && buffer[pos] <= '9')) {
+            pos++;
+        }
+        else if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z')) {
             pos++;
         }
         else
@@ -36,9 +40,15 @@ function readRequiredIdentifier(buffer, end, pos) {
     return { newPos: result.newPos, successful: result.newPos != startPos, needMoreLookahead: result.needMoreLookahead };
 }
 function readPrimitive(buffer, end, pos) {
-    // for now good enough
-    var result = readRequiredIdentifier(buffer, end, pos);
-    return result;
+    var start = pos;
+    while (pos < end) {
+        if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z') || ('0' <= buffer[pos] && buffer[pos] <= '9') || buffer[pos] == '.') {
+            pos++;
+        }
+        else
+            break;
+    }
+    return { newPos: pos, successful: start != pos, needMoreLookahead: pos == end };
 }
 function readMatchIdentifier(buffer, end, pos, identifier) {
     var strOffset = 0;
@@ -1845,23 +1855,25 @@ var Tokenizer = (function () {
     };
     return Tokenizer;
 }());
+function tokenize2(line, s, eof) {
+    var text = line.innerText;
+    var tokens = [];
+    Tokenizer.Tokenize(s, text, 0, text.length, eof, tokens);
+    var newHtml = "";
+    var lastPos = 0;
+    for (var _i = 0, tokens_1 = tokens; _i < tokens_1.length; _i++) {
+        var t = tokens_1[_i];
+        var tokenText = text.substring(lastPos, t.endPos);
+        lastPos = t.endPos;
+        newHtml += "<span class=\"token " + TokenType[t.type] + "\">" + tokenText + "</span>";
+    }
+    line.innerHTML = newHtml;
+}
 function tokenize() {
     var s = { stack: [], identifier: undefined };
     var arr = jQuery(".js-file-line");
     for (var lineIdx = 0; lineIdx < arr.length; lineIdx++) {
-        var line = arr[lineIdx];
-        var text = line.innerText;
-        var tokens = [];
-        Tokenizer.Tokenize(s, text, 0, text.length, lineIdx === arr.length - 1, tokens);
-        var newHtml = "";
-        var lastPos = 0;
-        for (var _i = 0, tokens_1 = tokens; _i < tokens_1.length; _i++) {
-            var t = tokens_1[_i];
-            var tokenText = text.substring(lastPos, t.endPos);
-            lastPos = t.endPos;
-            newHtml += "<span class=\"token " + TokenType[t.type] + "\">" + tokenText + "</span>";
-        }
-        line.innerHTML = newHtml;
+        tokenize2(arr[lineIdx], s, lineIdx === arr.length - 1);
     }
 }
 var lastPathName = '';
@@ -1873,6 +1885,10 @@ function update() {
     lastPathName = newPathName;
     if (lastPathName.endsWith(".tyml")) {
         tokenize();
+    }
+    for (var _i = 0, _a = $("pre[lang='tyml'] code"); _i < _a.length; _i++) {
+        var html = _a[_i];
+        tokenize2(html, null, true);
     }
 }
 var pjaxContainer = jQuery('#js-repo-pjax-container')[0];
