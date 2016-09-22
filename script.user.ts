@@ -121,10 +121,9 @@ function readOptionalIdentifier(buffer: string, end: number, pos: number): { new
     var start = pos;
     while (pos < end)
     {
-        if (pos != start && ('0' <= buffer[pos] && buffer[pos] <= '9')) {
-            pos++;
-        }
-        else if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z')) {
+        if (('0' <= buffer[pos] && buffer[pos] <= '9') 
+			|| ('a' <= buffer[pos] && buffer[pos] <= 'z') 
+			|| ('A' <= buffer[pos] && buffer[pos] <= 'Z')  || buffer[pos] == '!') {
             pos++;
         }
         else break;
@@ -143,7 +142,11 @@ function readPrimitive(buffer: string, end: number, pos: number): { newPos: numb
     var start = pos;
     while (pos < end)
     {
-        if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z') || ('0' <= buffer[pos] && buffer[pos] <= '9') || buffer[pos] == '.') {
+        if (('a' <= buffer[pos] && buffer[pos] <= 'z') 
+			|| ('A' <= buffer[pos] && buffer[pos] <= 'Z') 
+			|| ('0' <= buffer[pos] && buffer[pos] <= '9') 
+			|| buffer[pos] == '.'
+			|| buffer[pos] == '!') {
             pos++;
         }
         else break;
@@ -1705,15 +1708,18 @@ function tokenize2(line: HTMLElement, s: TokenizerState, eof: boolean) {
     var text = line.innerText;
     var tokens = [] as Token[];
     Tokenizer.Tokenize(s, text, 0, text.length, eof, tokens);
-    var newHtml = "";
+	while (line.firstChild) {
+    	line.removeChild(line.firstChild);
+	}
     var lastPos = 0;
     for (var t of tokens) {
         var tokenText = text.substring(lastPos, t.endPos);
-        lastPos = t.endPos; 
-        newHtml += `<span class="token ${TokenType[t.type]}">${tokenText}</span>`;
+        lastPos = t.endPos;
+		var span = document.createElement("span");
+		span.textContent = tokenText;
+		span.className = `token ${TokenType[t.type]}`;
+        line.appendChild(span);
     }
-    
-    line.innerHTML = newHtml;
 }
 
 function tokenize() {
