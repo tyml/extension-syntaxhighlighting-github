@@ -22,10 +22,9 @@ function readWhitespace(buffer, end, pos) {
 function readOptionalIdentifier(buffer, end, pos) {
     var start = pos;
     while (pos < end) {
-        if (pos != start && ('0' <= buffer[pos] && buffer[pos] <= '9')) {
-            pos++;
-        }
-        else if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z')) {
+        if (('0' <= buffer[pos] && buffer[pos] <= '9')
+            || ('a' <= buffer[pos] && buffer[pos] <= 'z')
+            || ('A' <= buffer[pos] && buffer[pos] <= 'Z') || buffer[pos] == '!') {
             pos++;
         }
         else
@@ -41,7 +40,11 @@ function readRequiredIdentifier(buffer, end, pos) {
 function readPrimitive(buffer, end, pos) {
     var start = pos;
     while (pos < end) {
-        if (('a' <= buffer[pos] && buffer[pos] <= 'z') || ('A' <= buffer[pos] && buffer[pos] <= 'Z') || ('0' <= buffer[pos] && buffer[pos] <= '9') || buffer[pos] == '.') {
+        if (('a' <= buffer[pos] && buffer[pos] <= 'z')
+            || ('A' <= buffer[pos] && buffer[pos] <= 'Z')
+            || ('0' <= buffer[pos] && buffer[pos] <= '9')
+            || buffer[pos] == '.'
+            || buffer[pos] == '!') {
             pos++;
         }
         else
@@ -1858,15 +1861,19 @@ function tokenize2(line, s, eof) {
     var text = line.innerText;
     var tokens = [];
     Tokenizer.Tokenize(s, text, 0, text.length, eof, tokens);
-    var newHtml = "";
+    while (line.firstChild) {
+        line.removeChild(line.firstChild);
+    }
     var lastPos = 0;
     for (var _i = 0, tokens_1 = tokens; _i < tokens_1.length; _i++) {
         var t = tokens_1[_i];
         var tokenText = text.substring(lastPos, t.endPos);
         lastPos = t.endPos;
-        newHtml += "<span class=\"token " + TokenType[t.type] + "\">" + tokenText + "</span>";
+        var span = document.createElement("span");
+        span.textContent = tokenText;
+        span.className = "token " + TokenType[t.type];
+        line.appendChild(span);
     }
-    line.innerHTML = newHtml;
 }
 function tokenize() {
     var s = { stack: [], identifier: undefined };
