@@ -1705,7 +1705,7 @@ class Tokenizer
 }
 
 function tokenize2(line: HTMLElement, s: TokenizerState, eof: boolean) {
-    var text = line.innerText;
+    var text = line.textContent;
     var tokens = [] as Token[];
     Tokenizer.Tokenize(s, text, 0, text.length, eof, tokens);
 	while (line.firstChild) {
