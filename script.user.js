@@ -1858,7 +1858,7 @@ var Tokenizer = (function () {
     return Tokenizer;
 }());
 function tokenize2(line, s, eof) {
-    var text = line.innerText;
+    var text = line.textContent;
     var tokens = [];
     Tokenizer.Tokenize(s, text, 0, text.length, eof, tokens);
     while (line.firstChild) {
